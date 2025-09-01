@@ -119,6 +119,7 @@
                  </svg>
                  <span id="save-btn-text">Save Changes</span>
             </button>
+            <a href="/" class="block text-center mt-4 text-sm text-gray-600 hover:text-gray-800">Cancel & Return to Profile</a>
         </div>
     </div>
     
@@ -372,9 +373,12 @@
             try {
                 await setDoc(docRef, newData);
                 console.log('Information updated successfully!');
+                document.getElementById('save-btn-text').textContent = 'Saved!';
+                setTimeout(() => {
+                    window.location.href = window.location.pathname; // Redirect to the public page
+                }, 2000);
             } catch (error) {
                 console.error("Error writing document: ", error);
-            } finally {
                  document.getElementById('spinner').classList.add('hidden');
                  document.getElementById('save-btn-text').textContent = 'Save Changes';
             }
@@ -382,8 +386,5 @@
 
         // Run the main initialization function
         initializeAppLogic();
-
-    </script>
-</body>
-</html>
+// ... existing code ... -->
 
