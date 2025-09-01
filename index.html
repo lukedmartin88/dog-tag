@@ -304,13 +304,6 @@
             }
         });
         
-        // Admin panel logic
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('edit') === 'true') {
-            document.getElementById('public-view-container').classList.add('hidden');
-            document.getElementById('admin-view').classList.remove('hidden');
-        }
-
         document.getElementById('login-btn').addEventListener('click', async () => {
             const password = document.getElementById('password').value;
             if (password === 'admin123') { // Simple hardcoded password
@@ -384,7 +377,16 @@
             }
         });
 
-        // Run the main initialization function
-        initializeAppLogic();
-// ... existing code ... -->
+        // Main Router / Initializer
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('edit') === 'true') {
+            document.getElementById('public-view-container').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+        } else {
+            // Run the main initialization function only for the public view
+            initializeAppLogic();
+        }
+    </script>
+</body>
+</html>
 
