@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- EmailJS SDK for sending email notifications -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -16,7 +18,7 @@
 
     <div id="config-error" class="hidden max-w-md mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl m-4" role="alert">
         <strong class="font-bold">Configuration Error!</strong>
-        <span class="block sm:inline">Please follow the `firebase_setup_instructions.md` guide and paste your Firebase configuration into this HTML file.</span>
+        <span class="block sm:inline">Please follow the `setup_instructions.md` guide to configure Firebase and EmailJS.</span>
     </div>
 
     <!-- Public Facing Page -->
@@ -29,6 +31,10 @@
                 <p class="mt-4 text-center text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
                 <div class="mt-6 border-t border-gray-200 pt-6">
                     <div>
+                        <h3 class="text-gray-800 font-semibold">Owner's Name:</h3>
+                        <p id="owner-name-display" class="text-slate-600">Owner's Name</p>
+                    </div>
+                    <div class="mt-4">
                         <h3 class="text-gray-800 font-semibold">Home Address:</h3>
                         <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
                     </div>
@@ -64,6 +70,10 @@
         <div id="edit-form" class="hidden">
             <h2 class="text-2xl font-bold mb-6">Edit Dog's Information</h2>
             <div class="space-y-4">
+                <div>
+                    <label for="owner-name" class="block text-sm font-medium text-gray-700">Owner's Name</label>
+                    <input type="text" id="owner-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
                 <div>
                     <label for="dog-name" class="block text-sm font-medium text-gray-700">Dog's Name</label>
                     <input type="text" id="dog-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
@@ -111,7 +121,8 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         // ===================================================================================
-        // Your web app's Firebase configuration
+        // PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
+        // You will get this from the setup_instructions.md guide
         // ===================================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyAdH46dbeJah3qVYSoXNxETAafRjPzyBug",
@@ -123,9 +134,21 @@
         };
         // ===================================================================================
 
+        // ===================================================================================
+        // TODO: PASTE YOUR EMAILJS CREDENTIALS HERE
+        // You will get this from the setup_instructions.md guide
+        // ===================================================================================
+        const emailJSConfig = {
+            serviceID: 'service_54a85fx',
+            templateID: 'template_r06sy9p',
+            publicKey: 'g2xqXnEuJPe14VUGU'
+        };
+        // ===================================================================================
+
         // Declare DB variables in the higher scope
         let db;
         let docRef;
+        let notificationSent = false;
 
         const themes = {
             emerald: { text: 'text-emerald-600', bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600', border: 'border-emerald-500' },
@@ -133,6 +156,7 @@
             rose: { text: 'text-rose-600', bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600', border: 'border-rose-500' },
         };
         const defaultData = {
+            ownerName: "Owner's Name",
             name: "Dog's Name",
             breed: "Breed",
             address: "123 Puppy Lane, Dogtown",
@@ -158,6 +182,7 @@
 
         function populatePublicView(data) {
             currentData = data;
+            document.getElementById('owner-name-display').textContent = data.ownerName;
             document.getElementById('dog-name-display').textContent = data.name;
             document.getElementById('breed-display').textContent = data.breed;
             document.getElementById('address-display').textContent = data.address;
@@ -171,6 +196,7 @@
         }
 
         function populateAdminView(data) {
+            document.getElementById('owner-name').value = data.ownerName;
             document.getElementById('dog-name').value = data.name;
             document.getElementById('breed').value = data.breed;
             document.getElementById('address').value = data.address;
@@ -180,16 +206,37 @@
             document.getElementById('photo-preview').classList.remove('hidden');
         }
 
+        function sendScanNotification() {
+            if (notificationSent || emailJSConfig.serviceID === 'YOUR_SERVICE_ID') {
+                console.log("Email notification skipped (already sent or not configured).");
+                return;
+            }
+            notificationSent = true; 
+            
+            const templateParams = {
+                dog_name: currentData.name,
+                owner_name: currentData.ownerName,
+                scan_time: new Date().toLocaleString()
+            };
+
+            emailjs.send(emailJSConfig.serviceID, emailJSConfig.templateID, templateParams, emailJSConfig.publicKey)
+                .then((response) => {
+                   console.log('SUCCESS! Email notification sent.', response.status, response.text);
+                }, (error) => {
+                   console.log('FAILED... Could not send email.', error);
+                });
+        }
+
+
         async function initializeAppLogic() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEditMode = urlParams.get('edit') === 'true';
+
             // 1. Check if the Firebase config is still the placeholder
             if (firebaseConfig.apiKey === "YOUR_API_KEY") {
                 console.error("Firebase config is not set. Using default data for preview.");
                 document.getElementById('config-error').classList.remove('hidden');
-                
-                // Populate with default data so the page isn't blank
                 populatePublicView(defaultData); 
-                
-                // Don't initialize firebase, just stop here.
                 return; 
             }
 
@@ -201,7 +248,11 @@
             // 3. Listen for real-time updates from Firebase
             onSnapshot(docRef, (doc) => {
                 if (doc.exists()) {
-                    populatePublicView(doc.data());
+                    const data = doc.data();
+                    populatePublicView(data);
+                    if (!isEditMode) {
+                        sendScanNotification();
+                    }
                 } else {
                     console.log("No such document! Creating with default data.");
                     populatePublicView(defaultData);
@@ -209,6 +260,7 @@
                 }
             }, (error) => {
                 console.error("Firebase onSnapshot error:", error);
+                populatePublicView(defaultData);
             });
             
             // 4. Initial theme setup on page load
@@ -230,7 +282,6 @@
                     const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
                     window.open(whatsappUrl, '_blank');
                 }, () => {
-                    // Using a custom modal/alert in the future would be better
                     console.error('Could not get your location. Please enable location services.');
                 });
             } else {
@@ -249,7 +300,6 @@
             const password = document.getElementById('password').value;
             if (password === 'admin123') { // Simple hardcoded password
                 if (!docRef) {
-                     // If firebase isn't initialized because config was missing, initialize it now for the admin panel.
                     if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
                         const app = initializeApp(firebaseConfig);
                         db = getFirestore(app);
@@ -261,13 +311,8 @@
                 }
                 document.getElementById('login-form').classList.add('hidden');
                 document.getElementById('edit-form').classList.remove('hidden');
-                // Load data into admin form once logged in
                 const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    populateAdminView(docSnap.data());
-                } else {
-                    populateAdminView(defaultData);
-                }
+                populateAdminView(docSnap.exists() ? docSnap.data() : defaultData);
             } else {
                 document.getElementById('login-error').classList.remove('hidden');
             }
@@ -300,6 +345,7 @@
             const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
 
             const newData = {
+                ownerName: document.getElementById('owner-name').value,
                 name: document.getElementById('dog-name').value,
                 breed: document.getElementById('breed').value,
                 address: document.getElementById('address').value,
@@ -310,7 +356,6 @@
 
             try {
                 await setDoc(docRef, newData);
-                // Using console.log instead of alert
                 console.log('Information updated successfully!');
             } catch (error) {
                 console.error("Error writing document: ", error);
