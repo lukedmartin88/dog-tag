@@ -329,7 +329,10 @@
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             if (params.has('edit')) {
-// ... existing code ... -->
+                document.getElementById('public-view-container').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+            } else {
+                initializeAppLogic();
             }
 
             // --- Admin Panel Event Listeners ---
@@ -375,5 +378,80 @@
 
             // Photo Preview
             document.getElementById('photo-upload').addEventListener('change', (e) => {
-// ... existing code ... -->
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById('photo-preview').src = event.target.result;
+                        document.getElementById('photo-preview').classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Save Changes
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                document.getElementById('spinner').classList.remove('hidden');
+                document.getElementById('save-btn-text').textContent = 'Saving...';
+                
+                const file = document.getElementById('photo-upload').files[0];
+                let photoBase64 = null;
+
+                if (file) {
+                    photoBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => resolve(event.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                const docRef = doc(db, "dogProfile", docId);
+                const currentDoc = await getDoc(docRef);
+                const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
+
+                const newData = {
+                    ownerName: document.getElementById('owner-name').value,
+                    ownerEmail: document.getElementById('owner-email').value,
+                    name: document.getElementById('dog-name').value,
+                    breed: document.getElementById('breed').value,
+                    address: document.getElementById('address').value,
+                    phone: document.getElementById('phone').value,
+                    themeColor: document.getElementById('theme-color-picker').value,
+                    photo: photoBase64 || existingData.photo,
+                };
+
+                try {
+                    await setDoc(docRef, newData);
+                    console.log('Information updated successfully!');
+                    document.getElementById('save-btn-text').textContent = 'Saved!';
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname; // Redirect to the public page
+                    }, 2000);
+                } catch (error) {
+                    console.error("Error writing document: ", error);
+                     document.getElementById('spinner').classList.add('hidden');
+                     document.getElementById('save-btn-text').textContent = 'Save Changes';
+                }
+            });
+
+            // Location Sharing Button
+            document.getElementById('location-btn').addEventListener('click', () => {
+                const locationStatusEl = document.getElementById('location-status');
+                locationStatusEl.textContent = 'Getting your location...';
+                getGeoLocation(locationInfo => {
+                    if (locationInfo.startsWith('http')) {
+                        locationStatusEl.textContent = 'Location found! Opening WhatsApp...';
+                        const message = `I've found your dog! Here is my current location: ${locationInfo}`;
+                        const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                    } else {
+                        locationStatusEl.textContent = locationInfo; // Display error message
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
 
