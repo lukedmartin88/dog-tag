@@ -3,191 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lost Dog Info</title>
+    <title>I'm Lost! - Please Help</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- EmailJS SDK for sending email notifications -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
-<body class="bg-gray-100">
+<body class="bg-slate-50">
 
-    <div id="config-error" class="hidden max-w-md mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl m-4" role="alert">
-        <strong class="font-bold">Configuration Error!</strong>
-        <span class="block sm:inline">Please follow the `setup_instructions.md` guide to configure Firebase and EmailJS.</span>
-    </div>
+    <!-- Container to manage views -->
+    <div id="app-container" class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- Public Facing Page -->
-    <div id="public-view-container">
-        <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden m-4">
-            <div class="p-8">
-                <img id="dog-photo" class="w-48 h-48 rounded-full mx-auto object-cover ring-4 ring-gray-200" src="https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo" alt="Photo of the dog">
-                <div id="dog-name-display" class="text-center mt-5 uppercase tracking-wide text-sm themed-text font-semibold">Dog's Name</div>
-                <p id="breed-display" class="text-center block mt-1 text-lg leading-tight font-medium text-black">Breed</p>
-                <p class="mt-4 text-center text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
-                <div class="mt-6 border-t border-gray-200 pt-6">
+        <!-- Public View Container -->
+        <div id="public-view-container">
+            <div class="max-w-md w-full mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <div class="text-center">
+                        <img id="dog-photo-display" class="w-32 h-32 mx-auto rounded-full object-cover border-4 border-slate-200" src="https://placehold.co/128x128/e2e8f0/e2e8f0?text=Dog" alt="Photo of the dog">
+                        <h2 id="dog-name-display" class="mt-4 text-3xl font-bold text-gray-900">Dog's Name</h2>
+                        <p id="breed-display" class="text-md text-slate-500">Breed</p>
+                    </div>
+                    <p class="mt-4 text-center text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
+                    <div class="mt-6 border-t border-gray-200 pt-6">
+                        <div>
+                            <h3 class="text-gray-800 font-semibold">Owner's Name:</h3>
+                            <p id="owner-name-display" class="text-slate-600">Owner's Name</p>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-gray-800 font-semibold">Home Address:</h3>
+                            <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
+                            <p id="phone-display" class="text-slate-600">07123 456789</p>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-gray-800 font-semibold">Owner's Email:</h3>
+                            <a id="email-display" href="#" class="text-blue-600 hover:underline">owner@example.com</a>
+                        </div>
+                    </div>
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
+                        <a id="whatsapp-btn" href="#" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
+                        <button id="location-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
+                    </div>
+                     <p id="location-status" class="text-center text-sm text-red-500 mt-3 h-4"></p>
+                </div>
+                <div class="bg-slate-50 px-8 py-4 text-center text-sm">
+                    <a href="?edit=true" id="admin-link" class="text-slate-400 hover:text-slate-600">Admin Login</a>
+                </div>
+            </div>
+             <!-- Configuration Error Message -->
+            <div id="config-error" class="hidden max-w-md mx-auto mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <p class="font-bold">Configuration Error!</p>
+                <p class="text-sm">Firebase or EmailJS credentials are not set in the HTML file. Please follow the setup guide.</p>
+            </div>
+        </div>
+
+        <!-- Admin View -->
+        <div id="admin-view" class="hidden max-w-md w-full mx-auto bg-white rounded-2xl shadow-lg p-8">
+            <!-- Login Form -->
+            <div id="login-form">
+                <h2 class="text-2xl font-bold mb-6">Admin Login</h2>
+                <div class="space-y-4">
                     <div>
-                        <h3 class="text-gray-800 font-semibold">Owner's Name:</h3>
-                        <p id="owner-name-display" class="text-slate-600">Owner's Name</p>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                     </div>
-                    <div class="mt-4">
-                        <h3 class="text-gray-800 font-semibold">Home Address:</h3>
-                        <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
-                    </div>
-                    <div class="mt-4">
-                        <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
-                        <p id="phone-display" class="text-slate-600">07123 456789</p>
-                    </div>
-                    <div class="mt-4">
-                        <h3 class="text-gray-800 font-semibold">Owner's Email:</h3>
-                        <a id="email-display" href="#" class="text-blue-600 hover:underline">owner@example.com</a>
-                    </div>
-                </div>
-                <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
-                    <a id="whatsapp-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
-                    <button id="share-location-btn" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
+                     <p id="login-error" class="text-red-500 text-sm h-4"></p>
+                    <button id="login-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">Login</button>
                 </div>
             </div>
-        </div>
-        <div class="text-center py-4">
-            <a href="?edit=true" class="text-sm text-gray-500 hover:text-gray-700 transition">Admin Login</a>
-        </div>
-    </div>
 
-
-    <!-- Admin Panel (Hidden by default) -->
-    <div id="admin-view" class="hidden max-w-lg mx-auto p-6 bg-white rounded-lg shadow-xl m-4">
-        <!-- Login Form -->
-        <div id="login-form">
-            <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
-            <input type="password" id="password" placeholder="Enter password" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-            <button id="login-btn" class="mt-4 w-full themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-md">Login</button>
-            <p id="login-error" class="text-red-500 mt-2 hidden">Incorrect password.</p>
-        </div>
-
-        <!-- Edit Form -->
-        <div id="edit-form" class="hidden">
-            <h2 class="text-2xl font-bold mb-6">Edit Dog's Information</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="owner-name" class="block text-sm font-medium text-gray-700">Owner's Name</label>
-                    <input type="text" id="owner-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+            <!-- Edit Form -->
+            <div id="edit-form" class="hidden">
+                <h2 class="text-2xl font-bold mb-6">Edit Dog's Information</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="owner-name" class="block text-sm font-medium text-gray-700">Owner's Name</label>
+                        <input type="text" id="owner-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="owner-email" class="block text-sm font-medium text-gray-700">Owner's Email</label>
+                        <input type="email" id="owner-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="dog-name" class="block text-sm font-medium text-gray-700">Dog's Name</label>
+                        <input type="text" id="dog-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="breed" class="block text-sm font-medium text-gray-700">Breed</label>
+                        <input type="text" id="breed" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-gray-700">Home Address</label>
+                        <input type="text" id="address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-700">Contact Phone (No +)</label>
+                        <input type="tel" id="phone" placeholder="e.g. 447123456789" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="photo-upload" class="block text-sm font-medium text-gray-700">Dog's Photo</label>
+                        <input type="file" id="photo-upload" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                        <img id="photo-preview" class="hidden mt-4 w-24 h-24 rounded-full object-cover" src="" alt="New photo preview">
+                    </div>
+                    <div>
+                        <label for="theme-select" class="block text-sm font-medium text-gray-700">Color Theme</label>
+                        <select id="theme-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="emerald">Green</option>
+                            <option value="sky">Blue</option>
+                            <option value="rose">Pink</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label for="owner-email" class="block text-sm font-medium text-gray-700">Owner's Email</label>
-                    <input type="email" id="owner-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <label for="dog-name" class="block text-sm font-medium text-gray-700">Dog's Name</label>
-                    <input type="text" id="dog-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                 <div>
-                    <label for="breed" class="block text-sm font-medium text-gray-700">Breed</label>
-                    <input type="text" id="breed" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
-                    <input type="text" id="address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700">Contact Phone (include country code, e.g., 447123...)</label>
-                    <input type="text" id="phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
-                </div>
-                <div>
-                    <label for="dog-photo-upload" class="block text-sm font-medium text-gray-700">Dog's Photo</label>
-                    <input type="file" id="dog-photo-upload" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
-                    <img id="photo-preview" class="mt-2 h-32 w-32 object-cover rounded-md hidden" src="#" alt="Photo preview">
-                </div>
-                <div>
-                    <label for="theme-select" class="block text-sm font-medium text-gray-700">Color Theme</label>
-                    <select id="theme-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option value="emerald">Emerald Green</option>
-                        <option value="sky">Sky Blue</option>
-                        <option value="rose">Rose Pink</option>
-                    </select>
-                </div>
+                <button type="submit" id="save-btn" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition duration-300">
+                     <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                     </svg>
+                     <span id="save-btn-text">Save Changes</span>
+                </button>
+                <a href="/" class="block text-center mt-4 text-sm text-gray-600 hover:text-gray-800">Cancel & Return to Profile</a>
             </div>
-            <button id="save-btn" class="mt-6 w-full themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-md flex items-center justify-center">
-                 <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                 </svg>
-                 <span id="save-btn-text">Save Changes</span>
-            </button>
-            <a href="/" class="block text-center mt-4 text-sm text-gray-600 hover:text-gray-800">Cancel & Return to Profile</a>
         </div>
     </div>
     
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-        // ===================================================================================
+        // =================================================================================
+        // --- CONFIGURATION - PASTE YOUR CREDENTIALS HERE ---
+        // =================================================================================
+
         // PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
-        // You will get this from the setup_instructions.md guide
-        // ===================================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyAdH46dbeJah3qVYSoXNxETAafRjPzyBug",
             authDomain: "dog-tag-database.firebaseapp.com",
             projectId: "dog-tag-database",
-            storageBucket: "dog-tag-database.appspot.com",
+            storageBucket: "dog-tag-database.firebasestorage.app",
             messagingSenderId: "577380939735",
             appId: "1:577380939735:web:43fba3d41008c941e5bd92"
         };
-        // ===================================================================================
-
-        // ===================================================================================
+        
         // PASTE YOUR EMAILJS CREDENTIALS HERE
-        // You will get this from the setup_instructions.md guide
-        // ===================================================================================
         const emailJSConfig = {
             serviceID: 'service_54a85fx',
             templateID: 'template_r06sy9p',
             publicKey: 'g2xqXnEuJPe14VUGU'
         };
-        // ===================================================================================
 
-        // Declare DB variables in the higher scope
+        // This is the password you will use to log in to the admin panel.
+        const ADMIN_PASSWORD = 'admin';
+
+        // =================================================================================
+        // --- APPLICATION LOGIC ---
+        // =================================================================================
+
         let db;
-        let docRef;
+        let currentData;
         let notificationSent = false;
+        const docId = "dogInfo"; // Using one document for all the data
 
-        const themes = {
-            emerald: { text: 'text-emerald-600', bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600', border: 'border-emerald-500' },
-            sky: { text: 'text-sky-600', bg: 'bg-sky-500', hoverBg: 'hover:bg-sky-600', border: 'border-sky-500' },
-            rose: { text: 'text-rose-600', bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600', border: 'border-rose-500' },
-        };
         const defaultData = {
             ownerName: "Owner's Name",
             ownerEmail: "owner@example.com",
             name: "Dog's Name",
             breed: "Breed",
             address: "123 Puppy Lane, Dogtown",
-            phone: "447123456789",
-            photo: "https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo",
+            phone: "447123456789", // No "+" symbol
+            photo: "https://placehold.co/128x128/a7f3d0/333333?text=Dog",
             theme: "emerald"
         };
-        let currentData = { ...defaultData };
         
+        const themes = {
+            emerald: { bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600' },
+            sky: { bg: 'bg-sky-500', hoverBg: 'hover:bg-sky-600' },
+            rose: { bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600' }
+        };
+
         function applyTheme(themeName) {
             const theme = themes[themeName] || themes.emerald;
-            const allThemeClasses = Object.values(themes).flatMap(t => [t.text, t.bg, t.hoverBg, t.border]);
+            const callBtn = document.getElementById('call-btn');
             
-            document.querySelectorAll('.themed-text, .themed-bg, .themed-hover-bg, .themed-border').forEach(el => {
-                el.classList.remove(...allThemeClasses);
+            // Remove all possible theme classes
+            Object.values(themes).forEach(t => {
+                callBtn.classList.remove(t.bg, t.hoverBg);
             });
             
-            document.querySelectorAll('.themed-text').forEach(el => el.classList.add(theme.text));
-            document.querySelectorAll('.themed-bg').forEach(el => el.classList.add(theme.bg));
-            document.querySelectorAll('.themed-hover-bg').forEach(el => el.classList.add(theme.hoverBg));
-            document.querySelectorAll('.themed-border').forEach(el => el.classList.add(theme.border));
+            // Add the correct theme classes
+            callBtn.classList.add(theme.bg, theme.hoverBg);
         }
 
         function populatePublicView(data) {
@@ -199,13 +219,15 @@
             document.getElementById('dog-name-display').textContent = data.name;
             document.getElementById('breed-display').textContent = data.breed;
             document.getElementById('address-display').textContent = data.address;
-            const phone = data.phone || '';
-            document.getElementById('phone-display').textContent = phone.replace(/(\d{2})(\d{4})(\d{6})/, '+$1 $2 $3');
-            document.getElementById('dog-photo').src = data.photo;
+            document.getElementById('phone-display').textContent = data.phone;
+            document.getElementById('dog-photo-display').src = data.photo;
+
+            document.getElementById('call-btn').href = `tel:${data.phone}`;
+            const whatsappMessage = encodeURIComponent(`Hi, I think I've found your dog, ${data.name}!`);
+            document.getElementById('whatsapp-btn').href = `https://wa.me/${data.phone}?text=${whatsappMessage}`;
             
-            document.getElementById('call-btn').href = `tel:+${phone}`;
-            document.getElementById('whatsapp-btn').href = `https://wa.me/${phone}`;
             applyTheme(data.theme);
+            sendScanNotification();
         }
 
         function populateAdminView(data) {
@@ -220,18 +242,35 @@
             document.getElementById('photo-preview').classList.remove('hidden');
         }
 
+        function getGeoLocation(callback) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const mapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        callback(mapsLink);
+                    },
+                    () => {
+                        callback("Location access denied or unavailable.");
+                    }
+                );
+            } else {
+                callback("Geolocation is not supported by this browser.");
+            }
+        }
+
         function sendScanNotification() {
             if (notificationSent || emailJSConfig.serviceID === 'YOUR_SERVICE_ID') {
                 console.log("Email notification skipped (already sent or not configured).");
                 return;
             }
-            notificationSent = true;
-
-            const sendEmail = (locationInfo) => {
-                const templateParams = {
+            notificationSent = true; 
+            
+            getGeoLocation(locationInfo => {
+                 const templateParams = {
                     dog_name: currentData.name,
                     owner_name: currentData.ownerName,
-                    owner_email: currentData.ownerEmail,
+                    owner_email: currentData.ownerEmail, 
                     scan_time: new Date().toLocaleString(),
                     scanner_location: locationInfo
                 };
@@ -240,171 +279,143 @@
                     .then((response) => {
                        console.log('SUCCESS! Email notification sent.', response.status, response.text);
                     }, (error) => {
-                       console.log('FAILED... Could not send email.', error);
+                       console.log('FAILED... to send email.', error);
                     });
-            };
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        const locationLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-                        sendEmail(locationLink);
-                    },
-                    () => {
-                        sendEmail("Location permission was denied or an error occurred.");
-                    },
-                    { timeout: 10000, enableHighAccuracy: true }
-                );
-            } else {
-                sendEmail("Geolocation is not supported by the scanner's browser.");
-            }
+            });
         }
-
 
         async function initializeAppLogic() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const isEditMode = urlParams.get('edit') === 'true';
-
-            // 1. Check if the Firebase config is still the placeholder
             if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                console.error("Firebase config is not set. Using default data for preview.");
                 document.getElementById('config-error').classList.remove('hidden');
-                populatePublicView(defaultData); 
-                return; 
+                populatePublicView(defaultData);
+                return;
             }
 
-            // 2. Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            docRef = doc(db, "dogProfile", "mainInfo");
-
-            // 3. Listen for real-time updates from Firebase
-            onSnapshot(docRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    populatePublicView(data);
-                    if (!isEditMode) {
-                        sendScanNotification();
-                    }
-                } else {
-                    console.log("No such document! Creating with default data.");
-                    populatePublicView(defaultData);
-                    setDoc(docRef, defaultData);
-                }
-            }, (error) => {
-                console.error("Firebase onSnapshot error:", error);
-                populatePublicView(defaultData);
-            });
-            
-            // 4. Initial theme setup on page load
             try {
-                const doc = await getDoc(docRef);
-                const theme = doc.exists() ? doc.data().theme : defaultData.theme;
-                applyTheme(theme);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                const docRef = doc(db, "dogProfile", docId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    populatePublicView(docSnap.data());
+                } else {
+                    console.log("No such document! Populating with default data.");
+                    populatePublicView(defaultData);
+                }
             } catch (error) {
-                console.error("Error getting initial document for theme:", error);
-                applyTheme(defaultData.theme);
+                console.error("Error initializing Firebase or fetching data:", error);
+                document.getElementById('config-error').classList.remove('hidden');
+                populatePublicView(defaultData);
             }
         }
-
-        document.getElementById('share-location-btn').addEventListener('click', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const { latitude, longitude } = position.coords;
-                    const message = `I've found your dog! Here is my current location: https://www.google.com/maps?q=${latitude},${longitude}`;
-                    const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                }, () => {
-                    console.error('Could not get your location. Please enable location services.');
-                });
-            } else {
-                console.error('Geolocation is not supported by this browser.');
-            }
-        });
         
-        document.getElementById('login-btn').addEventListener('click', async () => {
-            const password = document.getElementById('password').value;
-            if (password === 'admin123') { // Simple hardcoded password
-                if (!docRef) {
-                    if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('edit')) {
+                document.getElementById('public-view-container').classList.add('hidden');
+                document.getElementById('admin-view').classList.remove('hidden');
+            } else {
+                initializeAppLogic();
+            }
+
+            // --- Admin Panel Event Listeners ---
+            
+            // Login
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (document.getElementById('password').value === ADMIN_PASSWORD) {
+                    document.getElementById('login-form').classList.add('hidden');
+                    document.getElementById('edit-form').classList.remove('hidden');
+                    
+                    if (!db) {
                         const app = initializeApp(firebaseConfig);
                         db = getFirestore(app);
-                        docRef = doc(db, "dogProfile", "mainInfo");
-                    } else {
-                        console.error("Cannot login, Firebase config is missing.");
-                        return;
                     }
+                    const docRef = doc(db, "dogProfile", docId);
+                    const docSnap = await getDoc(docRef);
+                    populateAdminView(docSnap.exists() ? docSnap.data() : defaultData);
+
+                } else {
+                    document.getElementById('login-error').textContent = 'Incorrect password.';
                 }
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('edit-form').classList.remove('hidden');
-                const docSnap = await getDoc(docRef);
-                populateAdminView(docSnap.exists() ? docSnap.data() : defaultData);
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        });
-        
-        let photoBase64 = null;
-        document.getElementById('dog-photo-upload').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    photoBase64 = e.target.result;
-                    const preview = document.getElementById('photo-preview');
-                    preview.src = photoBase64;
-                    preview.classList.remove('hidden');
+            });
+
+            // Photo Preview
+            document.getElementById('photo-upload').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById('photo-preview').src = event.target.result;
+                        document.getElementById('photo-preview').classList.remove('hidden');
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Save Changes
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                document.getElementById('spinner').classList.remove('hidden');
+                document.getElementById('save-btn-text').textContent = 'Saving...';
+                
+                const file = document.getElementById('photo-upload').files[0];
+                let photoBase64 = null;
+
+                if (file) {
+                    photoBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (event) => resolve(event.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                }
+                
+                const docRef = doc(db, "dogProfile", docId);
+                const currentDoc = await getDoc(docRef);
+                const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
+
+                const newData = {
+                    ownerName: document.getElementById('owner-name').value,
+                    ownerEmail: document.getElementById('owner-email').value,
+                    name: document.getElementById('dog-name').value,
+                    breed: document.getElementById('breed').value,
+                    address: document.getElementById('address').value,
+                    phone: document.getElementById('phone').value,
+                    theme: document.getElementById('theme-select').value,
+                    photo: photoBase64 || existingData.photo,
                 };
-                reader.readAsDataURL(file);
-            }
+
+                try {
+                    await setDoc(docRef, newData);
+                    console.log('Information updated successfully!');
+                    document.getElementById('save-btn-text').textContent = 'Saved!';
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname; // Redirect to the public page
+                    }, 2000);
+                } catch (error) {
+                    console.error("Error writing document: ", error);
+                     document.getElementById('spinner').classList.add('hidden');
+                     document.getElementById('save-btn-text').textContent = 'Save Changes';
+                }
+            });
+
+            // Location Sharing Button
+            document.getElementById('location-btn').addEventListener('click', () => {
+                const locationStatusEl = document.getElementById('location-status');
+                locationStatusEl.textContent = 'Getting your location...';
+                getGeoLocation(locationInfo => {
+                    if (locationInfo.startsWith('http')) {
+                        locationStatusEl.textContent = 'Location found! Opening WhatsApp...';
+                        const message = `I've found your dog! Here is my current location: ${locationInfo}`;
+                        const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+                    } else {
+                        locationStatusEl.textContent = locationInfo; // Display error message
+                    }
+                });
+            });
         });
-
-        document.getElementById('save-btn').addEventListener('click', async () => {
-            if (!docRef) {
-                 console.error("Database not initialized. Cannot save.");
-                 return;
-            }
-            document.getElementById('spinner').classList.remove('hidden');
-            document.getElementById('save-btn-text').textContent = 'Saving...';
-            
-            const currentDoc = await getDoc(docRef);
-            const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
-
-            const newData = {
-                ownerName: document.getElementById('owner-name').value,
-                ownerEmail: document.getElementById('owner-email').value,
-                name: document.getElementById('dog-name').value,
-                breed: document.getElementById('breed').value,
-                address: document.getElementById('address').value,
-                phone: document.getElementById('phone').value,
-                theme: document.getElementById('theme-select').value,
-                photo: photoBase64 || existingData.photo,
-            };
-
-            try {
-                await setDoc(docRef, newData);
-                console.log('Information updated successfully!');
-                document.getElementById('save-btn-text').textContent = 'Saved!';
-                setTimeout(() => {
-                    window.location.href = window.location.pathname; // Redirect to the public page
-                }, 2000);
-            } catch (error) {
-                console.error("Error writing document: ", error);
-                 document.getElementById('spinner').classList.add('hidden');
-                 document.getElementById('save-btn-text').textContent = 'Save Changes';
-            }
-        });
-
-        // Main Router / Initializer
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('edit') === 'true') {
-            document.getElementById('public-view-container').classList.add('hidden');
-            document.getElementById('admin-view').classList.remove('hidden');
-        } else {
-            // Run the main initialization function only for the public view
-            initializeAppLogic();
-        }
     </script>
 </body>
 </html>
