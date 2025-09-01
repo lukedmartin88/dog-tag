@@ -125,6 +125,7 @@
                         <input type="color" id="theme-color-picker" class="mt-1 block w-full h-10 border border-gray-300 rounded-md cursor-pointer">
                     </div>
                 </div>
+                 <p id="save-error" class="text-red-500 text-sm h-4 mt-4 text-center"></p>
                 <button type="submit" id="save-btn" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition duration-300">
                      <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -133,13 +134,12 @@
                      <span id="save-btn-text">Save Changes</span>
                 </button>
                 <a href="/" class="block text-center mt-4 text-sm text-gray-600 hover:text-gray-800">Cancel & Return to Profile</a>
-            </div>
+            </form>
         </div>
     </div>
     
     <!-- Firebase SDK -->
     <script type="module">
-        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
@@ -147,7 +147,6 @@
         // --- CONFIGURATION - PASTE YOUR CREDENTIALS HERE ---
         // =================================================================================
 
-        // PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE
         const firebaseConfig = {
             apiKey: "AIzaSyAdH46dbeJah3qVYSoXNxETAafRjPzyBug",
             authDomain: "dog-tag-database.firebaseapp.com",
@@ -157,14 +156,12 @@
             appId: "1:577380939735:web:43fba3d41008c941e5bd92"
         };
         
-        // PASTE YOUR EMAILJS CREDENTIALS HERE
         const emailJSConfig = {
             serviceID: 'service_54a85fx',
             templateID: 'template_r06sy9p',
             publicKey: 'g2xqXnEuJPe14VUGU'
         };
 
-        // This is the password you will use to log in to the admin panel.
         const ADMIN_PASSWORD = 'admin123';
 
         // =================================================================================
@@ -174,7 +171,7 @@
         let db;
         let currentData;
         let notificationSent = false;
-        const docId = "dogInfo"; // Using one document for all the data
+        const docId = "dogInfo";
 
         const defaultData = {
             ownerName: "Owner's Name",
@@ -182,12 +179,11 @@
             name: "Dog's Name",
             breed: "Breed",
             address: "123 Puppy Lane, Dogtown",
-            phone: "447123456789", // No "+" symbol
+            phone: "447123456789",
             photo: "https://placehold.co/128x128/a7f3d0/333333?text=Dog",
-            themeColor: "#10b981" // Default to green
+            themeColor: "#10b981"
         };
-
-        // pSBC - Shade, Blend and Convert a color utility
+        
         const pSBC = (p, c0, c1, l) => {
             let r, g, b, P, f, t, h, i = parseInt, m = Math.round, a = typeof (c1) == "string";
             if (typeof (p) != "number" || p < -1 || p > 1 || typeof (c0) != "string" || (c0[0] != 'r' && c0[0] != '#') || (c1 && !a)) return null;
@@ -218,9 +214,7 @@
             const callBtn = document.getElementById('call-btn');
             if (callBtn) {
                 callBtn.style.backgroundColor = colorHex;
-                const darkerColor = pSBC(-0.15, colorHex); // Create a darker shade for hover
-                
-                // Use mouse events to handle hover for dynamic colors
+                const darkerColor = pSBC(-0.15, colorHex);
                 callBtn.addEventListener('mouseenter', () => callBtn.style.backgroundColor = darkerColor);
                 callBtn.addEventListener('mouseleave', () => callBtn.style.backgroundColor = colorHex);
             }
@@ -237,11 +231,9 @@
             document.getElementById('address-display').textContent = data.address;
             document.getElementById('phone-display').textContent = data.phone;
             document.getElementById('dog-photo-display').src = data.photo;
-
             document.getElementById('call-btn').href = `tel:${data.phone}`;
             const whatsappMessage = encodeURIComponent(`Hi, I think I've found your dog, ${data.name}!`);
             document.getElementById('whatsapp-btn').href = `https://wa.me/${data.phone}?text=${whatsappMessage}`;
-            
             applyTheme(data.themeColor);
             sendScanNotification();
         }
@@ -281,7 +273,6 @@
                 return;
             }
             notificationSent = true; 
-            
             getGeoLocation(locationInfo => {
                  const templateParams = {
                     dog_name: currentData.name,
@@ -290,13 +281,9 @@
                     scan_time: new Date().toLocaleString(),
                     scanner_location: locationInfo
                 };
-
                 emailjs.send(emailJSConfig.serviceID, emailJSConfig.templateID, templateParams, emailJSConfig.publicKey)
-                    .then((response) => {
-                       console.log('SUCCESS! Email notification sent.', response.status, response.text);
-                    }, (error) => {
-                       console.log('FAILED... to send email.', error);
-                    });
+                    .then((response) => console.log('SUCCESS! Email notification sent.', response.status, response.text))
+                    .catch((error) => console.log('FAILED... to send email.', error));
             });
         }
 
@@ -306,19 +293,12 @@
                 populatePublicView(defaultData);
                 return;
             }
-
             try {
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 const docRef = doc(db, "dogProfile", docId);
                 const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    populatePublicView(docSnap.data());
-                } else {
-                    console.log("No such document! Populating with default data.");
-                    populatePublicView(defaultData);
-                }
+                populatePublicView(docSnap.exists() ? docSnap.data() : defaultData);
             } catch (error) {
                 console.error("Error initializing Firebase or fetching data:", error);
                 document.getElementById('config-error').classList.remove('hidden');
@@ -335,48 +315,36 @@
                 initializeAppLogic();
             }
 
-            // --- Admin Panel Event Listeners ---
-            
-            // Login
             document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const loginErrorEl = document.getElementById('login-error');
                 const loginBtn = document.getElementById('login-btn');
-                loginErrorEl.textContent = ''; // Clear previous errors
-
+                loginErrorEl.textContent = '';
                 if (document.getElementById('password').value === ADMIN_PASSWORD) {
                     loginBtn.textContent = 'Logging in...';
                     loginBtn.disabled = true;
-
                     try {
                         if (!db) {
-                            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                                throw new Error("Firebase config is not set. Please check your HTML file.");
-                            }
+                            if (firebaseConfig.apiKey === "YOUR_API_KEY") throw new Error("Firebase config not set.");
                             const app = initializeApp(firebaseConfig);
                             db = getFirestore(app);
                         }
                         const docRef = doc(db, "dogProfile", docId);
                         const docSnap = await getDoc(docRef);
-                        
-                        // Success
                         document.getElementById('login-form').classList.add('hidden');
                         document.getElementById('edit-form').classList.remove('hidden');
                         populateAdminView(docSnap.exists() ? docSnap.data() : defaultData);
-
                     } catch (error) {
-                        console.error("Firebase connection/read error on login:", error);
-                        loginErrorEl.textContent = 'Could not connect to the database. Check console for details.';
+                        console.error("Firebase connection error on login:", error);
+                        loginErrorEl.textContent = 'Could not connect to database.';
                         loginBtn.textContent = 'Login';
                         loginBtn.disabled = false;
                     }
-
                 } else {
                     loginErrorEl.textContent = 'Incorrect password.';
                 }
             });
 
-            // Photo Preview
             document.getElementById('photo-upload').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -389,15 +357,17 @@
                 }
             });
 
-            // Save Changes
             document.getElementById('edit-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                document.getElementById('spinner').classList.remove('hidden');
-                document.getElementById('save-btn-text').textContent = 'Saving...';
+                const saveBtnText = document.getElementById('save-btn-text');
+                const spinner = document.getElementById('spinner');
+                const saveErrorEl = document.getElementById('save-error');
+                spinner.classList.remove('hidden');
+                saveBtnText.textContent = 'Saving...';
+                saveErrorEl.textContent = '';
                 
                 const file = document.getElementById('photo-upload').files[0];
                 let photoBase64 = null;
-
                 if (file) {
                     photoBase64 = await new Promise((resolve) => {
                         const reader = new FileReader();
@@ -406,36 +376,35 @@
                     });
                 }
                 
-                const docRef = doc(db, "dogProfile", docId);
-                const currentDoc = await getDoc(docRef);
-                const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
-
-                const newData = {
-                    ownerName: document.getElementById('owner-name').value,
-                    ownerEmail: document.getElementById('owner-email').value,
-                    name: document.getElementById('dog-name').value,
-                    breed: document.getElementById('breed').value,
-                    address: document.getElementById('address').value,
-                    phone: document.getElementById('phone').value,
-                    themeColor: document.getElementById('theme-color-picker').value,
-                    photo: photoBase64 || existingData.photo,
-                };
-
                 try {
+                    const docRef = doc(db, "dogProfile", docId);
+                    const currentDoc = await getDoc(docRef);
+                    const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
+
+                    const newData = {
+                        ownerName: document.getElementById('owner-name').value,
+                        ownerEmail: document.getElementById('owner-email').value,
+                        name: document.getElementById('dog-name').value,
+                        breed: document.getElementById('breed').value,
+                        address: document.getElementById('address').value,
+                        phone: document.getElementById('phone').value,
+                        themeColor: document.getElementById('theme-color-picker').value,
+                        photo: photoBase64 || existingData.photo,
+                    };
+
                     await setDoc(docRef, newData);
-                    console.log('Information updated successfully!');
-                    document.getElementById('save-btn-text').textContent = 'Saved!';
+                    saveBtnText.textContent = 'Saved!';
                     setTimeout(() => {
-                        window.location.href = window.location.pathname; // Redirect to the public page
-                    }, 2000);
+                        window.location.href = window.location.pathname;
+                    }, 1500);
                 } catch (error) {
                     console.error("Error writing document: ", error);
-                     document.getElementById('spinner').classList.add('hidden');
-                     document.getElementById('save-btn-text').textContent = 'Save Changes';
+                    spinner.classList.add('hidden');
+                    saveBtnText.textContent = 'Save Changes';
+                    saveErrorEl.textContent = 'Save failed. Check console for details.';
                 }
             });
 
-            // Location Sharing Button
             document.getElementById('location-btn').addEventListener('click', () => {
                 const locationStatusEl = document.getElementById('location-status');
                 locationStatusEl.textContent = 'Getting your location...';
@@ -446,7 +415,7 @@
                         const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
                         window.open(whatsappUrl, '_blank');
                     } else {
-                        locationStatusEl.textContent = locationInfo; // Display error message
+                        locationStatusEl.textContent = locationInfo;
                     }
                 });
             });
@@ -454,6 +423,3 @@
     </script>
 </body>
 </html>
-
-
-
