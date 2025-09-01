@@ -20,27 +20,35 @@
     </div>
 
     <!-- Public Facing Page -->
-    <div id="public-view" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden m-2 sm:m-4">
-        <img id="dog-photo" class="w-full h-auto max-h-80 object-contain bg-gray-100" src="https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo" alt="Photo of the dog">
-        <div class="p-6">
-            <div id="dog-name-display" class="uppercase tracking-wide text-sm themed-text font-semibold">Dog's Name</div>
-            <p id="breed-display" class="block mt-1 text-lg leading-tight font-medium text-black">Breed</p>
-            <p class="mt-2 text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
-            <div class="mt-4">
-                <h3 class="text-gray-800 font-semibold">Home Address:</h3>
-                <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
-            </div>
-            <div class="mt-4">
-                <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
-                <p id="phone-display" class="text-slate-600">07123 456789</p>
-            </div>
-            <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
-                <a id="whatsapp-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
-                <button id="share-location-btn" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
+    <div id="public-view-container">
+        <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden m-4">
+            <div class="p-8">
+                <img id="dog-photo" class="w-48 h-48 rounded-full mx-auto object-cover ring-4 ring-gray-200" src="https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo" alt="Photo of the dog">
+                <div id="dog-name-display" class="text-center mt-5 uppercase tracking-wide text-sm themed-text font-semibold">Dog's Name</div>
+                <p id="breed-display" class="text-center block mt-1 text-lg leading-tight font-medium text-black">Breed</p>
+                <p class="mt-4 text-center text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
+                <div class="mt-6 border-t border-gray-200 pt-6">
+                    <div>
+                        <h3 class="text-gray-800 font-semibold">Home Address:</h3>
+                        <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
+                        <p id="phone-display" class="text-slate-600">07123 456789</p>
+                    </div>
+                </div>
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
+                    <a id="whatsapp-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
+                    <button id="share-location-btn" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
+                </div>
             </div>
         </div>
+        <div class="text-center py-4">
+            <a href="?edit=true" class="text-sm text-gray-500 hover:text-gray-700 transition">Admin Login</a>
+        </div>
     </div>
+
 
     <!-- Admin Panel (Hidden by default) -->
     <div id="admin-view" class="hidden max-w-lg mx-auto p-6 bg-white rounded-lg shadow-xl m-4">
@@ -180,7 +188,7 @@ const app = initializeApp(firebaseConfig);
         async function initializeAppLogic() {
             // 1. Check if the Firebase config is still the placeholder
             if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                document.getElementById('public-view').classList.add('hidden');
+                document.getElementById('public-view-container').classList.add('hidden');
                 document.getElementById('admin-view').classList.add('hidden');
                 document.getElementById('config-error').classList.remove('hidden');
                 console.error("Firebase config is not set. Please paste your config from the Firebase console.");
@@ -235,7 +243,7 @@ const app = initializeApp(firebaseConfig);
         // Admin panel logic
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('edit') === 'true') {
-            document.getElementById('public-view').classList.add('hidden');
+            document.getElementById('public-view-container').classList.add('hidden');
             document.getElementById('admin-view').classList.remove('hidden');
         }
 
@@ -313,5 +321,4 @@ const app = initializeApp(firebaseConfig);
     </script>
 </body>
 </html>
-
 
