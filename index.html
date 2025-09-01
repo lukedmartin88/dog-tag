@@ -42,6 +42,10 @@
                         <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
                         <p id="phone-display" class="text-slate-600">07123 456789</p>
                     </div>
+                    <div class="mt-4">
+                        <h3 class="text-gray-800 font-semibold">Owner's Email:</h3>
+                        <a id="email-display" href="#" class="text-blue-600 hover:underline">owner@example.com</a>
+                    </div>
                 </div>
                 <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
@@ -73,6 +77,10 @@
                 <div>
                     <label for="owner-name" class="block text-sm font-medium text-gray-700">Owner's Name</label>
                     <input type="text" id="owner-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="owner-email" class="block text-sm font-medium text-gray-700">Owner's Email</label>
+                    <input type="email" id="owner-email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
                 </div>
                 <div>
                     <label for="dog-name" class="block text-sm font-medium text-gray-700">Dog's Name</label>
@@ -135,7 +143,7 @@
         // ===================================================================================
 
         // ===================================================================================
-        // TODO: PASTE YOUR EMAILJS CREDENTIALS HERE
+        // PASTE YOUR EMAILJS CREDENTIALS HERE
         // You will get this from the setup_instructions.md guide
         // ===================================================================================
         const emailJSConfig = {
@@ -157,6 +165,7 @@
         };
         const defaultData = {
             ownerName: "Owner's Name",
+            ownerEmail: "owner@example.com",
             name: "Dog's Name",
             breed: "Breed",
             address: "123 Puppy Lane, Dogtown",
@@ -183,6 +192,9 @@
         function populatePublicView(data) {
             currentData = data;
             document.getElementById('owner-name-display').textContent = data.ownerName;
+            const emailDisplay = document.getElementById('email-display');
+            emailDisplay.textContent = data.ownerEmail;
+            emailDisplay.href = `mailto:${data.ownerEmail}`;
             document.getElementById('dog-name-display').textContent = data.name;
             document.getElementById('breed-display').textContent = data.breed;
             document.getElementById('address-display').textContent = data.address;
@@ -197,6 +209,7 @@
 
         function populateAdminView(data) {
             document.getElementById('owner-name').value = data.ownerName;
+            document.getElementById('owner-email').value = data.ownerEmail;
             document.getElementById('dog-name').value = data.name;
             document.getElementById('breed').value = data.breed;
             document.getElementById('address').value = data.address;
@@ -216,6 +229,7 @@
             const templateParams = {
                 dog_name: currentData.name,
                 owner_name: currentData.ownerName,
+                owner_email: currentData.ownerEmail, // Add owner's email to the parameters
                 scan_time: new Date().toLocaleString()
             };
 
@@ -346,6 +360,7 @@
 
             const newData = {
                 ownerName: document.getElementById('owner-name').value,
+                ownerEmail: document.getElementById('owner-email').value,
                 name: document.getElementById('dog-name').value,
                 breed: document.getElementById('breed').value,
                 address: document.getElementById('address').value,
