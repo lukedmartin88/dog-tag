@@ -3,384 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I'm Lost! - Please Help</title>
-    <!-- Tailwind CSS for styling -->
+    <title>Lost Dog Info</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .hidden {
-            display: none;
-        }
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100">
+
+    <div id="config-error" class="hidden max-w-md mx-auto bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl m-4" role="alert">
+        <strong class="font-bold">Configuration Error!</strong>
+        <span class="block sm:inline">Please follow the `firebase_setup_instructions.md` guide and paste your Firebase configuration into this HTML file.</span>
+    </div>
+
+    <!-- Public Facing Page -->
+    <div id="public-view" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl m-4">
+        <div class="md:flex">
+            <div class="md:shrink-0">
+                <img id="dog-photo" class="h-48 w-full object-cover md:h-full md:w-48" src="https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo" alt="Photo of the dog">
+            </div>
+            <div class="p-8">
+                <div id="dog-name-display" class="uppercase tracking-wide text-sm themed-text font-semibold">Dog's Name</div>
+                <p id="breed-display" class="block mt-1 text-lg leading-tight font-medium text-black">Breed</p>
+                <p class="mt-2 text-slate-500">If you've found me, thank you! I'm a bit lost. Please contact my owner using the details below.</p>
+                <div class="mt-4">
+                    <h3 class="text-gray-800 font-semibold">Home Address:</h3>
+                    <p id="address-display" class="text-slate-600">123 Puppy Lane, Dogtown</p>
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-gray-800 font-semibold">Owner's Contact:</h3>
+                    <p id="phone-display" class="text-slate-600">07123 456789</p>
+                </div>
+                <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
+                    <a id="whatsapp-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
+                    <button id="share-location-btn" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel (Hidden by default) -->
+    <div id="admin-view" class="hidden max-w-lg mx-auto p-6 bg-white rounded-lg shadow-xl m-4">
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2 class="text-2xl font-bold mb-4">Admin Login</h2>
+            <input type="password" id="password" placeholder="Enter password" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+            <button id="login-btn" class="mt-4 w-full themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-md">Login</button>
+            <p id="login-error" class="text-red-500 mt-2 hidden">Incorrect password.</p>
+        </div>
+
+        <!-- Edit Form -->
+        <div id="edit-form" class="hidden">
+            <h2 class="text-2xl font-bold mb-6">Edit Dog's Information</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="dog-name" class="block text-sm font-medium text-gray-700">Dog's Name</label>
+                    <input type="text" id="dog-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                 <div>
+                    <label for="breed" class="block text-sm font-medium text-gray-700">Breed</label>
+                    <input type="text" id="breed" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
+                    <input type="text" id="address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Contact Phone (include country code, e.g., 447123...)</label>
+                    <input type="text" id="phone" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label for="dog-photo-upload" class="block text-sm font-medium text-gray-700">Dog's Photo</label>
+                    <input type="file" id="dog-photo-upload" accept="image/*" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100">
+                    <img id="photo-preview" class="mt-2 h-32 w-32 object-cover rounded-md hidden" src="#" alt="Photo preview">
+                </div>
+                <div>
+                    <label for="theme-select" class="block text-sm font-medium text-gray-700">Color Theme</label>
+                    <select id="theme-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="emerald">Emerald Green</option>
+                        <option value="sky">Sky Blue</option>
+                        <option value="rose">Rose Pink</option>
+                    </select>
+                </div>
+            </div>
+            <button id="save-btn" class="mt-6 w-full themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-md flex items-center justify-center">
+                 <svg id="spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                 </svg>
+                 <span id="save-btn-text">Save Changes</span>
+            </button>
+        </div>
+    </div>
     
-    <!-- ======================================================= -->
-    <!-- ================== PUBLIC-FACING VIEW ================= -->
-    <!-- ======================================================= -->
-    <div id="public-view" class="w-full">
-        <div class="bg-white w-full max-w-md mx-auto my-4 p-6 rounded-2xl shadow-lg text-center">
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+     // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAdH46dbeJah3qVYSoXNxETAafRjPzyBug",
+  authDomain: "dog-tag-database.firebaseapp.com",
+  projectId: "dog-tag-database",
+  storageBucket: "dog-tag-database.firebasestorage.app",
+  messagingSenderId: "577380939735",
+  appId: "1:577380939735:web:43fba3d41008c941e5bd92"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+        // Declare DB variables in the higher scope
+        let db;
+        let docRef;
+
+        const themes = {
+            emerald: { text: 'text-emerald-600', bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600', border: 'border-emerald-500' },
+            sky: { text: 'text-sky-600', bg: 'bg-sky-500', hoverBg: 'hover:bg-sky-600', border: 'border-sky-500' },
+            rose: { text: 'text-rose-600', bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600', border: 'border-rose-500' },
+        };
+        const defaultData = {
+            name: "Dog's Name",
+            breed: "Breed",
+            address: "123 Puppy Lane, Dogtown",
+            phone: "447123456789",
+            photo: "https://placehold.co/600x400/d1d5db/374151?text=Dog's+Photo",
+            theme: "emerald"
+        };
+        let currentData = { ...defaultData };
+        
+        function applyTheme(themeName) {
+            const theme = themes[themeName] || themes.emerald;
+            const allThemeClasses = Object.values(themes).flatMap(t => [t.text, t.bg, t.hoverBg, t.border]);
             
-            <!-- Dog's Photo -->
-            <img id="dog-photo" src="https://placehold.co/150x150/a7f3d0/333333?text=Buddy" alt="A photo of the lost dog" class="w-36 h-36 mx-auto rounded-full object-cover border-4 themed-border -mt-24">
+            document.querySelectorAll('.themed-text, .themed-bg, .themed-hover-bg, .themed-border').forEach(el => {
+                el.classList.remove(...allThemeClasses);
+            });
             
-            <!-- Main Message -->
-            <h1 class="text-3xl font-bold text-gray-800 mt-4">I'm Lost!</h1>
-            <p class="text-gray-600 mt-2">Please help me get back to my family.</p>
+            document.querySelectorAll('.themed-text').forEach(el => el.classList.add(theme.text));
+            document.querySelectorAll('.themed-bg').forEach(el => el.classList.add(theme.bg));
+            document.querySelectorAll('.themed-hover-bg').forEach(el => el.classList.add(theme.hoverBg));
+            document.querySelectorAll('.themed-border').forEach(el => el.classList.add(theme.border));
+        }
+
+        function populatePublicView(data) {
+            currentData = data;
+            document.getElementById('dog-name-display').textContent = data.name;
+            document.getElementById('breed-display').textContent = data.breed;
+            document.getElementById('address-display').textContent = data.address;
+            const phone = data.phone || '';
+            document.getElementById('phone-display').textContent = phone.replace(/(\d{2})(\d{4})(\d{6})/, '+$1 $2 $3');
+            document.getElementById('dog-photo').src = data.photo;
             
-            <!-- Dog's Information -->
-            <div class="mt-6 text-left space-y-4">
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 themed-text mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    <div>
-                        <p class="font-semibold text-gray-700">Name</p>
-                        <p id="dog-name" class="text-gray-600">Buddy</p>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 themed-text mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                    <div>
-                        <p class="font-semibold text-gray-700">Breed</p>
-                        <p id="dog-breed" class="text-gray-600">Golden Retriever</p>
-                    </div>
-                </div>
-                <div class="flex items-center">
-                    <svg class="w-6 h-6 themed-text mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <div>
-                        <p class="font-semibold text-gray-700">Home Address</p>
-                        <p id="dog-address" class="text-gray-600">123 Dog Lane, London, W1A 1AA</p>
-                    </div>
-                </div>
-                 <div class="flex items-center">
-                    <svg class="w-6 h-6 themed-text mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                    <div>
-                        <p class="font-semibold text-gray-700">Owner's Contact</p>
-                        <p id="owner-contact" class="text-gray-600">+44 7123 456789</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="mt-8 flex flex-col space-y-3">
-                <a href="#" id="call-btn" class="w-full themed-bg themed-hover-bg text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                    Call Owner
-                </a>
-                <a href="#" id="whatsapp-msg-btn" class="w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center">
-                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16.75 13.96c.25.13.42.2.63.33.21.13.4.23.53.3.13.07.23.1.3.13.07.03.1.03.1.03.28 0 .56-.1.84-.28.28-.18.42-.42.42-.72 0-.25-.1-.5-.3-.75-.2-.25-.45-.48-.75-.7l-.15-.08c-.1-.05-.2-.1-.3-.15-.1-.05-.18-.1-.25-.13-.08-.03-.15-.05-.2-.08-.05-.03-.08-.03-.08-.03-.1-.05-.18-.1-.25-.13-.08-.03-.15-.05-.2-.08-.05-.03-.08-.03-.08-.03-.33-.18-.58-.4-.75-.68-.18-.28-.27-.6-.27-.98 0-.3.08-.58.23-.83.15-.25.35-.45.6-.6.25-.15.5-.23.75-.23.3 0 .58.1.83.3.25.2.42.42.5.7.08.28.12.58.12.9v.2c0 .2-.03.4-.1.6-.07.2-.15.38-.25.53-.1.15-.2.28-.3.4-.1.1-.18.18-.25.23-.08.05-.13.08-.15.08-.03 0-.03.03-.03.03-.03 0-.05 0-.08-.03-.03-.03-.05-.05-.08-.08-.25-.23-.5-.45-.75-.68-.25-.23-.45-.4-.6-.53-.15-.13-.25-.2-.3-.23-.05-.03-.08-.03-.08-.03-.03 0-.05-.03-.08-.03-.03 0-.05 0-.08 0h-.15c-.08 0-.15.03-.23.08-.08.05-.13.1-.15.15-.03.05-.03.1-.03.15v.33c0 .05.03.1.08.15.05.05.13.1.23.18.1.08.2.15.3.23.1.08.2.18.28.28.08.1.15.2.2.33.05.13.08.23.08.3v.15c0 .05-.03.1-.08.15-.05.05-.1.08-.18.08-.08 0-.15-.03-.23-.08-.08-.05-.18-.13-.28-.23-.1-.1-.2-.2-.3-.33-.1-.13-.18-.25-.23-.38-.05-.13-.08-.25-.08-.38v-.2c0-.3-.07-.58-.2-.83-.13-.25-.33-.45-.58-.6-.25-.15-.5-.23-.75-.23-.33 0-.63.1-.88.3-.25.2-.42.45-.5.75-.08.3-.12.63-.12.98 0 .35.08.68.25.98.18.3.4.55.68.75.28.2.58.33.88.42.3.08.6.12.88.12.33 0 .63-.05.9-.15.28-.1.5-.25.68-.45.18-.2.3-.4.38-.6v-.3c0-.1-.03-.18-.08-.23-.05-.05-.13-.08-.23-.08-.1 0-.2.03-.28.08-.08.05-.15.1-.23.18-.08.08-.15.15-.2.23-.05.08-.08.13-.08.15v.15c0 .05.03.1.08.15.05.05.1.08.18.08h.25c.1 0 .2-.03.3-.08.1-.05.2-.1.28-.18.08-.08.15-.15.2-.23.05-.08.1-.18.15-.28.05-.1.08-.2.08-.3z M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm3.17 14.85c-.3.18-.63.27-1 .27-.3 0-.58-.07-.83-.2-.25-.13-.45-.3-.6-.5l-.33-1.3c-.05-.2-.1-.38-.15-.53-.05-.15-.1-.28-.15-.4-.05-.13-.08-.2-.1-.23-.03-.03-.03-.03-.03-.03-.1.05-.2.1-.3.15-.1.05-.2.1-.3.15s-.2.08-.28.1c-.08.03-.15.03-.2.03-.33 0-.63-.1-.88-.3-.25-.2-.42-.45-.5-.75-.08-.3-.12-.63-.12-.98 0-.35.08-.68.25-.98.18-.3.4-.55.68-.75.28-.2.58-.33.88-.42.3-.08.6-.12.88-.12.35 0 .68.07.98.2.3.13.55.33.75.6.2.27.3.58.3.95 0 .3-.07.58-.2.83-.13.25-.33.45-.58.6s-.5.23-.75.23c-.1 0-.18-.03-.25-.08s-.13-.1-.15-.15v-.03c0-.03.03-.05.08-.08.05-.03.1-.05.15-.08.18-.08.33-.18.45-.28.13-.1.2-.2.23-.3.03-.1.03-.18.03-.23v-.25c0-.1-.03-.18-.08-.23-.05-.05-.13-.08-.2-.08s-.15.03-.2.08c-.05.05-.1.1-.15.18-.05.08-.08.15-.1.23-.03.08-.03.15-.03.2v.3c0 .35-.1.65-.28.9-.18.25-.42.42-.72.5-.3.08-.63.12-1 .12-.35 0-.68-.05-1-.15-.3-.1-.55-.25-.75-.45-.2-.2-.33-.42-.42-.68-.08-.25-.12-.5-.12-.75s.03-.5.1-.75c.07-.25.18-.48.33-.68.15-.2.33-.35.53-.45.2-.1.4-.18.6-.23.2-.05.4-.08.6-.08.3 0 .58.03.83.1.25.07.48.17.68.3.2.13.35.3.45.48.1.18.15.38.15.6v.3c0 .1-.03-.18-.08-.23-.05-.05-.1.08-.18.08-.05 0-.1-.03-.15-.08s-.1-.1-.15-.18c-.05-.08-.08-.15-.08-.23v-.15c0-.05.03-.1.08-.13.05-.03.1-.05.15-.05.05 0 .1.03.15.05.05.03.1.08.15.13.15.18.27.38.33.6.07.2.1.42.1.65z"></path></svg>
-                    Message (WhatsApp)
-                </a>
-                <button id="share-location-btn" class="w-full bg-blue-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Share Location via WhatsApp
-                </button>
-            </div>
-            
-            <p id="location-status" class="text-red-500 text-sm mt-4 h-5"></p>
+            document.getElementById('call-btn').href = `tel:+${phone}`;
+            document.getElementById('whatsapp-btn').href = `https://wa.me/${phone}`;
+            applyTheme(data.theme);
+        }
 
-            <div class="mt-6 text-center">
-                <a href="?edit=true" class="text-xs text-gray-400 hover:text-gray-600">Edit Info</a>
-            </div>
-        </div>
-    </div>
+        function populateAdminView(data) {
+            document.getElementById('dog-name').value = data.name;
+            document.getElementById('breed').value = data.breed;
+            document.getElementById('address').value = data.address;
+            document.getElementById('phone').value = data.phone;
+            document.getElementById('theme-select').value = data.theme;
+            document.getElementById('photo-preview').src = data.photo;
+            document.getElementById('photo-preview').classList.remove('hidden');
+        }
 
-    <!-- ======================================================= -->
-    <!-- ===================== ADMIN VIEW ====================== -->
-    <!-- ======================================================= -->
-    <div id="admin-view" class="hidden w-full">
-        <div class="bg-white w-full max-w-md mx-auto my-4 p-6 rounded-2xl shadow-lg">
-            
-            <!-- Login Form -->
-            <form id="login-form">
-                <h2 class="text-2xl font-bold text-gray-800 text-center">Admin Login</h2>
-                <p class="text-center text-gray-500 mt-2 mb-4">Enter the password to edit the details.</p>
-                <div class="mb-4">
-                    <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                    <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-                <p id="login-error" class="text-red-500 text-xs italic mb-4 h-4"></p>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Login
-                </button>
-            </form>
-
-            <!-- Edit Form -->
-            <form id="edit-form" class="hidden">
-                <h2 class="text-2xl font-bold text-gray-800 text-center mb-4">Edit Dog's Information</h2>
-                <p id="save-status" class="text-green-600 text-center mb-4 h-5"></p>
-
-                <!-- Dog Name -->
-                <div class="mb-4">
-                    <label for="edit-dog-name" class="block text-gray-700 text-sm font-bold mb-2">Dog's Name</label>
-                    <input type="text" id="edit-dog-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-                </div>
-
-                <!-- Dog Breed -->
-                <div class="mb-4">
-                    <label for="edit-dog-breed" class="block text-gray-700 text-sm font-bold mb-2">Breed</label>
-                    <input type="text" id="edit-dog-breed" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-                </div>
-
-                <!-- Address -->
-                <div class="mb-4">
-                    <label for="edit-dog-address" class="block text-gray-700 text-sm font-bold mb-2">Home Address</label>
-                    <input type="text" id="edit-dog-address" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-                </div>
-
-                <!-- Owner Contact -->
-                <div class="mb-4">
-                    <label for="edit-owner-contact" class="block text-gray-700 text-sm font-bold mb-2">Owner's Contact Number</label>
-                    <input type="text" id="edit-owner-contact" placeholder="e.g., 447123456789" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700">
-                </div>
-
-                <!-- Image Upload -->
-                <div class="mb-4">
-                    <label for="edit-dog-photo" class="block text-gray-700 text-sm font-bold mb-2">Dog's Photo</label>
-                    <input type="file" id="edit-dog-photo" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                    <img id="image-preview" class="mt-2 w-24 h-24 rounded-full object-cover" src="" alt="Image preview"/>
-                </div>
-
-                <!-- Theme Selector -->
-                <div class="mb-6">
-                     <label class="block text-gray-700 text-sm font-bold mb-2">Color Theme</label>
-                     <div class="flex justify-around">
-                        <label class="flex items-center space-x-2">
-                            <input type="radio" name="theme" value="emerald" class="form-radio text-emerald-500">
-                            <span class="text-emerald-500">Green</span>
-                        </label>
-                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="theme" value="sky" class="form-radio text-sky-500">
-                            <span class="text-sky-500">Blue</span>
-                        </label>
-                         <label class="flex items-center space-x-2">
-                            <input type="radio" name="theme" value="rose" class="form-radio text-rose-500">
-                            <span class="text-rose-500">Pink</span>
-                        </label>
-                     </div>
-                </div>
-
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    Save Changes
-                </button>
-                 <a href="/" class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800 w-full text-center mt-4">
-                    Cancel and View Page
-                </a>
-            </form>
-        </div>
-    </div>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-
-            // --- CONFIGURATION ---
-            // The password to access the edit form.
-            const ADMIN_PASSWORD = 'admin123';
-
-            const defaultData = {
-                name: 'Buddy',
-                breed: 'Golden Retriever',
-                address: '123 Dog Lane, London, W1A 1AA',
-                phone: '447123456789',
-                photo: 'https://placehold.co/150x150/a7f3d0/333333?text=Buddy',
-                theme: 'emerald' // 'emerald', 'sky', or 'rose'
-            };
-            
-            const themes = {
-                emerald: { border: 'border-emerald-300', bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600', text: 'text-emerald-500' },
-                sky: { border: 'border-sky-300', bg: 'bg-sky-500', hoverBg: 'hover:bg-sky-600', text: 'text-sky-500' },
-                rose: { border: 'border-rose-300', bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600', text: 'text-rose-500' }
-            };
-
-
-            // --- DOM ELEMENT REFERENCES ---
-            // Public View
-            const publicView = document.getElementById('public-view');
-            const dogPhotoEl = document.getElementById('dog-photo');
-            const dogNameEl = document.getElementById('dog-name');
-            const dogBreedEl = document.getElementById('dog-breed');
-            const dogAddressEl = document.getElementById('dog-address');
-            const ownerContactEl = document.getElementById('owner-contact');
-            const callBtn = document.getElementById('call-btn');
-            const whatsappMsgBtn = document.getElementById('whatsapp-msg-btn');
-            const shareLocationBtn = document.getElementById('share-location-btn');
-            const locationStatusEl = document.getElementById('location-status');
-            
-            // Admin View
-            const adminView = document.getElementById('admin-view');
-            const loginForm = document.getElementById('login-form');
-            const passwordInput = document.getElementById('password');
-            const loginErrorEl = document.getElementById('login-error');
-            
-            // Edit Form
-            const editForm = document.getElementById('edit-form');
-            const saveStatusEl = document.getElementById('save-status');
-            const editDogNameInput = document.getElementById('edit-dog-name');
-            const editDogBreedInput = document.getElementById('edit-dog-breed');
-            const editDogAddressInput = document.getElementById('edit-dog-address');
-            const editOwnerContactInput = document.getElementById('edit-owner-contact');
-            const editDogPhotoInput = document.getElementById('edit-dog-photo');
-            const imagePreview = document.getElementById('image-preview');
-
-
-            // --- FUNCTIONS ---
-            
-            function getStoredData() {
-                const savedData = localStorage.getItem('dogInfo');
-                return savedData ? JSON.parse(savedData) : defaultData;
+        async function initializeAppLogic() {
+            // 1. Check if the Firebase config is still the placeholder
+            if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+                document.getElementById('public-view').classList.add('hidden');
+                document.getElementById('admin-view').classList.add('hidden');
+                document.getElementById('config-error').classList.remove('hidden');
+                console.error("Firebase config is not set. Please paste your config from the Firebase console.");
+                return; // Stop execution
             }
 
-            function applyTheme(themeName) {
-                const theme = themes[themeName] || themes.emerald;
-                const allThemeClasses = Object.values(themes).flatMap(t => Object.values(t));
+            // 2. Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            docRef = doc(db, "dogProfile", "mainInfo");
 
-                // First, remove all existing theme classes to ensure a clean slate
-                document.querySelectorAll('.themed-border, .themed-bg, .themed-hover-bg, .themed-text').forEach(el => {
-                    el.classList.remove(...allThemeClasses);
-                });
-
-                // Apply new theme classes
-                document.querySelectorAll('.themed-border').forEach(el => el.classList.add(theme.border));
-                document.querySelectorAll('.themed-bg').forEach(el => el.classList.add(theme.bg));
-                document.querySelectorAll('.themed-hover-bg').forEach(el => el.classList.add(theme.hoverBg));
-                document.querySelectorAll('.themed-text').forEach(el => el.classList.add(theme.text));
-            }
-
-            function populatePublicView() {
-                const data = getStoredData();
-                dogPhotoEl.src = data.photo;
-                dogNameEl.textContent = data.name;
-                dogBreedEl.textContent = data.breed;
-                dogAddressEl.textContent = data.address;
-                ownerContactEl.textContent = data.phone.startsWith('+') ? data.phone : `+${data.phone}`;
-
-                const phoneNumber = data.phone;
-                callBtn.href = `tel:+${phoneNumber}`;
-                const defaultMessage = encodeURIComponent(`Hi, I think I've found your dog, ${data.name}!`);
-                whatsappMsgBtn.href = `https://wa.me/${phoneNumber}?text=${defaultMessage}`;
-                applyTheme(data.theme);
-            }
-
-            function populateEditForm() {
-                const data = getStoredData();
-                editDogNameInput.value = data.name;
-                editDogBreedInput.value = data.breed;
-                editDogAddressInput.value = data.address;
-                editOwnerContactInput.value = data.phone;
-                imagePreview.src = data.photo;
-                document.querySelector(`input[name="theme"][value="${data.theme}"]`).checked = true;
-            }
-
-
-            // --- EVENT LISTENERS & INITIALIZATION ---
-
-            // "Router" - checks URL for ?edit=true
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('edit')) {
-                publicView.classList.add('hidden');
-                adminView.classList.remove('hidden');
-            } else {
-                populatePublicView();
-            }
-
-            // Login form submission
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                if (passwordInput.value === ADMIN_PASSWORD) {
-                    loginForm.classList.add('hidden');
-                    editForm.classList.remove('hidden');
-                    populateEditForm();
+            // 3. Listen for real-time updates from Firebase
+            onSnapshot(docRef, (doc) => {
+                if (doc.exists()) {
+                    populatePublicView(doc.data());
                 } else {
-                    loginErrorEl.textContent = 'Incorrect password. Please try again.';
-                    passwordInput.value = '';
+                    console.log("No such document! Creating with default data.");
+                    populatePublicView(defaultData);
+                    setDoc(docRef, defaultData);
                 }
-            });
-
-            // Image preview handler
-            editDogPhotoInput.addEventListener('change', () => {
-                const file = editDogPhotoInput.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        imagePreview.src = e.target.result;
-                    }
-                    reader.readAsDataURL(file);
-                }
+            }, (error) => {
+                console.error("Firebase onSnapshot error:", error);
             });
             
-            // Edit form submission
-            editForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                saveStatusEl.textContent = "Saving...";
+            // 4. Initial theme setup on page load
+            try {
+                const doc = await getDoc(docRef);
+                const theme = doc.exists() ? doc.data().theme : defaultData.theme;
+                applyTheme(theme);
+            } catch (error) {
+                console.error("Error getting initial document for theme:", error);
+                applyTheme(defaultData.theme);
+            }
+        }
 
-                const file = editDogPhotoInput.files[0];
-                const currentData = getStoredData();
-                let newPhotoData = currentData.photo;
+        document.getElementById('share-location-btn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const { latitude, longitude } = position.coords;
+                    const message = `I've found your dog! Here is my current location: https://www.google.com/maps?q=${latitude},${longitude}`;
+                    const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                }, () => {
+                    // Using a custom modal/alert in the future would be better
+                    console.error('Could not get your location. Please enable location services.');
+                });
+            } else {
+                console.error('Geolocation is not supported by this browser.');
+            }
+        });
+        
+        // Admin panel logic
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('edit') === 'true') {
+            document.getElementById('public-view').classList.add('hidden');
+            document.getElementById('admin-view').classList.remove('hidden');
+        }
 
-                const saveData = (photoData) => {
-                     const updatedData = {
-                        name: editDogNameInput.value,
-                        breed: editDogBreedInput.value,
-                        address: editDogAddressInput.value,
-                        phone: editOwnerContactInput.value,
-                        photo: photoData,
-                        theme: document.querySelector('input[name="theme"]:checked').value
-                    };
-                    localStorage.setItem('dogInfo', JSON.stringify(updatedData));
-                    saveStatusEl.textContent = "Saved successfully! Redirecting...";
-
-                    setTimeout(() => {
-                        window.location.href = window.location.pathname; // Redirect to public page
-                    }, 1500);
-                };
-
-                if (file) { // If a new file was selected, read it
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        saveData(e.target.result); // Save with the new base64 image data
-                    }
-                    reader.readAsDataURL(file);
-                } else { // Otherwise, save with the existing image data
-                    saveData(currentData.photo);
-                }
-            });
-
-            // Geolocation logic for public view
-            shareLocationBtn.addEventListener('click', () => {
-                locationStatusEl.textContent = 'Getting location...';
-                if (!navigator.geolocation) {
-                    locationStatusEl.textContent = 'Geolocation is not supported by your browser.';
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            const password = document.getElementById('password').value;
+            if (password === 'admin123') { // Simple hardcoded password
+                if (!docRef) {
+                    console.error("Database not initialized. Cannot fetch data.");
                     return;
                 }
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        locationStatusEl.textContent = 'Location found! Opening WhatsApp...';
-                        const data = getStoredData();
-                        const message = `I've found your dog! Here is my current location: https://www.google.com/maps?q=${latitude},${longitude}`;
-                        const whatsappUrl = `https://wa.me/${data.phone}?text=${encodeURIComponent(message)}`;
-                        window.location.href = whatsappUrl;
-                    },
-                    (error) => {
-                        switch (error.code) {
-                            case error.PERMISSION_DENIED: locationStatusEl.textContent = "Please allow location access to share."; break;
-                            case error.POSITION_UNAVAILABLE: locationStatusEl.textContent = "Location information is unavailable."; break;
-                            case error.TIMEOUT: locationStatusEl.textContent = "Request for location timed out."; break;
-                            default: locationStatusEl.textContent = "An unknown error occurred."; break;
-                        }
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            });
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('edit-form').classList.remove('hidden');
+                // Load data into admin form once logged in
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    populateAdminView(docSnap.data());
+                } else {
+                    populateAdminView(defaultData);
+                }
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
         });
+        
+        let photoBase64 = null;
+        document.getElementById('dog-photo-upload').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoBase64 = e.target.result;
+                    const preview = document.getElementById('photo-preview');
+                    preview.src = photoBase64;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('save-btn').addEventListener('click', async () => {
+            if (!docRef) {
+                 console.error("Database not initialized. Cannot save.");
+                 return;
+            }
+            document.getElementById('spinner').classList.remove('hidden');
+            document.getElementById('save-btn-text').textContent = 'Saving...';
+            
+            const currentDoc = await getDoc(docRef);
+            const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
+
+            const newData = {
+                name: document.getElementById('dog-name').value,
+                breed: document.getElementById('breed').value,
+                address: document.getElementById('address').value,
+                phone: document.getElementById('phone').value,
+                theme: document.getElementById('theme-select').value,
+                photo: photoBase64 || existingData.photo,
+            };
+
+            try {
+                await setDoc(docRef, newData);
+                // Using console.log instead of alert
+                console.log('Information updated successfully!');
+            } catch (error) {
+                console.error("Error writing document: ", error);
+            } finally {
+                 document.getElementById('spinner').classList.add('hidden');
+                 document.getElementById('save-btn-text').textContent = 'Save Changes';
+            }
+        });
+
+        // Run the main initialization function
+        initializeAppLogic();
+
     </script>
 </body>
 </html>
-
 
