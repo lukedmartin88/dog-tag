@@ -178,147 +178,29 @@ const app = initializeApp(firebaseConfig);
         function populateAdminView(data) {
             document.getElementById('dog-name').value = data.name;
             document.getElementById('breed').value = data.breed;
-            document.getElementById('address').value = data.address;
-            document.getElementById('phone').value = data.phone;
-            document.getElementById('theme-select').value = data.theme;
-            document.getElementById('photo-preview').src = data.photo;
+// ... existing code ... -->
             document.getElementById('photo-preview').classList.remove('hidden');
         }
 
         async function initializeAppLogic() {
             // 1. Check if the Firebase config is still the placeholder
             if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-                document.getElementById('public-view-container').classList.add('hidden');
-                document.getElementById('admin-view').classList.add('hidden');
+                console.error("Firebase config is not set. Using default data for preview.");
                 document.getElementById('config-error').classList.remove('hidden');
-                console.error("Firebase config is not set. Please paste your config from the Firebase console.");
-                return; // Stop execution
+                
+                // Populate with default data so the page isn't blank
+                populatePublicView(defaultData); 
+                
+                // Don't initialize firebase, just stop here.
+                return; 
             }
 
             // 2. Initialize Firebase
             const app = initializeApp(firebaseConfig);
             db = getFirestore(app);
-            docRef = doc(db, "dogProfile", "mainInfo");
-
-            // 3. Listen for real-time updates from Firebase
-            onSnapshot(docRef, (doc) => {
-                if (doc.exists()) {
-                    populatePublicView(doc.data());
-                } else {
-                    console.log("No such document! Creating with default data.");
-                    populatePublicView(defaultData);
-                    setDoc(docRef, defaultData);
-                }
-            }, (error) => {
-                console.error("Firebase onSnapshot error:", error);
-            });
-            
-            // 4. Initial theme setup on page load
-            try {
-                const doc = await getDoc(docRef);
-                const theme = doc.exists() ? doc.data().theme : defaultData.theme;
-                applyTheme(theme);
-            } catch (error) {
-                console.error("Error getting initial document for theme:", error);
-                applyTheme(defaultData.theme);
-            }
-        }
-
-        document.getElementById('share-location-btn').addEventListener('click', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const { latitude, longitude } = position.coords;
-                    const message = `I've found your dog! Here is my current location: https://www.google.com/maps?q=${latitude},${longitude}`;
-                    const whatsappUrl = `https://wa.me/${currentData.phone}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                }, () => {
-                    // Using a custom modal/alert in the future would be better
-                    console.error('Could not get your location. Please enable location services.');
-                });
-            } else {
-                console.error('Geolocation is not supported by this browser.');
-            }
-        });
-        
-        // Admin panel logic
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('edit') === 'true') {
-            document.getElementById('public-view-container').classList.add('hidden');
-            document.getElementById('admin-view').classList.remove('hidden');
-        }
 
         document.getElementById('login-btn').addEventListener('click', async () => {
             const password = document.getElementById('password').value;
-            if (password === 'admin123') { // Simple hardcoded password
-                if (!docRef) {
-                    console.error("Database not initialized. Cannot fetch data.");
-                    return;
-                }
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('edit-form').classList.remove('hidden');
-                // Load data into admin form once logged in
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    populateAdminView(docSnap.data());
-                } else {
-                    populateAdminView(defaultData);
-                }
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
-        });
-        
-        let photoBase64 = null;
-        document.getElementById('dog-photo-upload').addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    photoBase64 = e.target.result;
-                    const preview = document.getElementById('photo-preview');
-                    preview.src = photoBase64;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+// ... existing code ... -->
 
-        document.getElementById('save-btn').addEventListener('click', async () => {
-            if (!docRef) {
-                 console.error("Database not initialized. Cannot save.");
-                 return;
-            }
-            document.getElementById('spinner').classList.remove('hidden');
-            document.getElementById('save-btn-text').textContent = 'Saving...';
-            
-            const currentDoc = await getDoc(docRef);
-            const existingData = currentDoc.exists() ? currentDoc.data() : defaultData;
-
-            const newData = {
-                name: document.getElementById('dog-name').value,
-                breed: document.getElementById('breed').value,
-                address: document.getElementById('address').value,
-                phone: document.getElementById('phone').value,
-                theme: document.getElementById('theme-select').value,
-                photo: photoBase64 || existingData.photo,
-            };
-
-            try {
-                await setDoc(docRef, newData);
-                // Using console.log instead of alert
-                console.log('Information updated successfully!');
-            } catch (error) {
-                console.error("Error writing document: ", error);
-            } finally {
-                 document.getElementById('spinner').classList.add('hidden');
-                 document.getElementById('save-btn-text').textContent = 'Save Changes';
-            }
-        });
-
-        // Run the main initialization function
-        initializeAppLogic();
-
-    </script>
-</body>
-</html>
 
