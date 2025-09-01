@@ -225,21 +225,40 @@
                 console.log("Email notification skipped (already sent or not configured).");
                 return;
             }
-            notificationSent = true; 
-            
-            const templateParams = {
-                dog_name: currentData.name,
-                owner_name: currentData.ownerName,
-                owner_email: currentData.ownerEmail, // Add owner's email to the parameters
-                scan_time: new Date().toLocaleString()
+            notificationSent = true;
+
+            const sendEmail = (locationInfo) => {
+                const templateParams = {
+                    dog_name: currentData.name,
+                    owner_name: currentData.ownerName,
+                    owner_email: currentData.ownerEmail,
+                    scan_time: new Date().toLocaleString(),
+                    scanner_location: locationInfo
+                };
+
+                emailjs.send(emailJSConfig.serviceID, emailJSConfig.templateID, templateParams, emailJSConfig.publicKey)
+                    .then((response) => {
+                       console.log('SUCCESS! Email notification sent.', response.status, response.text);
+                    }, (error) => {
+                       console.log('FAILED... Could not send email.', error);
+                    });
             };
 
-            emailjs.send(emailJSConfig.serviceID, emailJSConfig.templateID, templateParams, emailJSConfig.publicKey)
-                .then((response) => {
-                   console.log('SUCCESS! Email notification sent.', response.status, response.text);
-                }, (error) => {
-                   console.log('FAILED... Could not send email.', error);
-                });
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const locationLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        sendEmail(locationLink);
+                    },
+                    () => {
+                        sendEmail("Location permission was denied or an error occurred.");
+                    },
+                    { timeout: 10000, enableHighAccuracy: true }
+                );
+            } else {
+                sendEmail("Geolocation is not supported by the scanner's browser.");
+            }
         }
 
 
