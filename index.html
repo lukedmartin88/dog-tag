@@ -55,7 +55,7 @@
                         </div>
                     </div>
                     <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <a id="call-btn" href="#" class="themed-bg themed-hover-bg text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
+                        <a id="call-btn" href="#" class="text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Call Owner</a>
                         <a id="whatsapp-btn" href="#" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">WhatsApp</a>
                         <button id="location-btn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg text-center transition duration-300">Share Location</button>
                     </div>
@@ -121,12 +121,8 @@
                         <img id="photo-preview" class="hidden mt-4 w-24 h-24 rounded-full object-cover" src="" alt="New photo preview">
                     </div>
                     <div>
-                        <label for="theme-select" class="block text-sm font-medium text-gray-700">Color Theme</label>
-                        <select id="theme-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                            <option value="emerald">Green</option>
-                            <option value="sky">Blue</option>
-                            <option value="rose">Pink</option>
-                        </select>
+                        <label for="theme-color-picker" class="block text-sm font-medium text-gray-700">Theme Color</label>
+                        <input type="color" id="theme-color-picker" class="mt-1 block w-full h-10 border border-gray-300 rounded-md cursor-pointer">
                     </div>
                 </div>
                 <button type="submit" id="save-btn" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition duration-300">
@@ -188,26 +184,46 @@
             address: "123 Puppy Lane, Dogtown",
             phone: "447123456789", // No "+" symbol
             photo: "https://placehold.co/128x128/a7f3d0/333333?text=Dog",
-            theme: "emerald"
-        };
-        
-        const themes = {
-            emerald: { bg: 'bg-emerald-500', hoverBg: 'hover:bg-emerald-600' },
-            sky: { bg: 'bg-sky-500', hoverBg: 'hover:bg-sky-600' },
-            rose: { bg: 'bg-rose-500', hoverBg: 'hover:bg-rose-600' }
+            themeColor: "#10b981" // Default to green
         };
 
-        function applyTheme(themeName) {
-            const theme = themes[themeName] || themes.emerald;
+        // pSBC - Shade, Blend and Convert a color utility
+        const pSBC = (p, c0, c1, l) => {
+            let r, g, b, P, f, t, h, i = parseInt, m = Math.round, a = typeof (c1) == "string";
+            if (typeof (p) != "number" || p < -1 || p > 1 || typeof (c0) != "string" || (c0[0] != 'r' && c0[0] != '#') || (c1 && !a)) return null;
+            let pSBCr = (d) => {
+                let n = d.length, x = {};
+                if (n > 9) {
+                    [r, g, b, a] = d = d.split(","), n = d.length;
+                    if (n < 3 || n > 4) return null;
+                    x.r = i(r[3] == "a" ? r.slice(5) : r.slice(4)), x.g = i(g), x.b = i(b), x.a = a ? parseFloat(a) : -1
+                } else {
+                    if (n == 8 || n == 6 || n < 4) return null;
+                    if (n < 6) d = "#" + d[1] + d[1] + d[2] + d[2] + d[3] + d[3] + (n > 4 ? d[4] + d[4] : "");
+                    d = i(d.slice(1), 16);
+                    if (n == 9 || n == 5) x.r = d >> 24 & 255, x.g = d >> 16 & 255, x.b = d >> 8 & 255, x.a = m((d & 255) / 0.255) / 1000;
+                    else x.r = d >> 16, x.g = d >> 8 & 255, x.b = d & 255, x.a = -1
+                } return x
+            };
+            h = c0.length > 9, h = a ? c1.length > 9 ? true : c1 == "c" ? !h : false : h, f = pSBCr(c0), P = p < 0, t = c1 && c1 != "c" ? pSBCr(c1) : P ? { r: 0, g: 0, b: 0, a: -1 } : { r: 255, g: 255, b: 255, a: -1 }, p = P ? -p : p, P = 1 - p;
+            if (!f || !t) return null;
+            if (l) r = m(P * f.r + p * t.r), g = m(P * f.g + p * t.g), b = m(P * f.b + p * t.b);
+            else r = m((P * f.r ** 2 + p * t.r ** 2) ** 0.5), g = m((P * f.g ** 2 + p * t.g ** 2) ** 0.5), b = m((P * f.b ** 2 + p * t.b ** 2) ** 0.5);
+            a = f.a, t = t.a, f = a >= 0 || t >= 0, a = f ? a < 0 ? t : t < 0 ? a : a * P + t * p : 0;
+            if (h) return "rgb" + (f ? "a(" : "(") + r + "," + g + "," + b + (f ? "," + m(a * 1000) / 1000 : "") + ")";
+            else return "#" + (4294967296 + r * 16777216 + g * 65536 + b * 256 + (f ? m(a * 255) : 0)).toString(16).slice(1, f ? undefined : -2)
+        }
+
+        function applyTheme(colorHex) {
             const callBtn = document.getElementById('call-btn');
-            
-            // Remove all possible theme classes
-            Object.values(themes).forEach(t => {
-                callBtn.classList.remove(t.bg, t.hoverBg);
-            });
-            
-            // Add the correct theme classes
-            callBtn.classList.add(theme.bg, theme.hoverBg);
+            if (callBtn) {
+                callBtn.style.backgroundColor = colorHex;
+                const darkerColor = pSBC(-0.15, colorHex); // Create a darker shade for hover
+                
+                // Use mouse events to handle hover for dynamic colors
+                callBtn.addEventListener('mouseenter', () => callBtn.style.backgroundColor = darkerColor);
+                callBtn.addEventListener('mouseleave', () => callBtn.style.backgroundColor = colorHex);
+            }
         }
 
         function populatePublicView(data) {
@@ -226,7 +242,7 @@
             const whatsappMessage = encodeURIComponent(`Hi, I think I've found your dog, ${data.name}!`);
             document.getElementById('whatsapp-btn').href = `https://wa.me/${data.phone}?text=${whatsappMessage}`;
             
-            applyTheme(data.theme);
+            applyTheme(data.themeColor);
             sendScanNotification();
         }
 
@@ -237,7 +253,7 @@
             document.getElementById('breed').value = data.breed;
             document.getElementById('address').value = data.address;
             document.getElementById('phone').value = data.phone;
-            document.getElementById('theme-select').value = data.theme;
+            document.getElementById('theme-color-picker').value = data.themeColor;
             document.getElementById('photo-preview').src = data.photo;
             document.getElementById('photo-preview').classList.remove('hidden');
         }
@@ -382,7 +398,7 @@
                     breed: document.getElementById('breed').value,
                     address: document.getElementById('address').value,
                     phone: document.getElementById('phone').value,
-                    theme: document.getElementById('theme-select').value,
+                    themeColor: document.getElementById('theme-color-picker').value,
                     photo: photoBase64 || existingData.photo,
                 };
 
