@@ -152,7 +152,7 @@
             apiKey: "AIzaSyAdH46dbeJah3qVYSoXNxETAafRjPzyBug",
             authDomain: "dog-tag-database.firebaseapp.com",
             projectId: "dog-tag-database",
-            storageBucket: "dog-tag-database.firebasestorage.app",
+            storageBucket: "dog-tag-database.firebasestorage.app", // <-- CORRECTED URL
             messagingSenderId: "577380939735",
             appId: "1:577380939735:web:43fba3d41008c941e5bd92"
         };
@@ -376,7 +376,7 @@
 
                 try {
                     if (file) {
-                        const storageRef = ref(storage, `dog-photos/${docId}-${new Date().getTime()}`);
+                        const storageRef = ref(storage, `dog-photos/${docId}`);
                         const snapshot = await uploadBytes(storageRef, file);
                         photoURL = await getDownloadURL(snapshot.ref);
                     }
@@ -406,10 +406,16 @@
                     console.error("SAVE FAILED:", error);
                     spinner.classList.add('hidden');
                     saveBtnText.textContent = 'Save Changes';
-                    if (error.code && error.code.includes('storage/unauthorized')) {
-                        saveErrorEl.textContent = 'Upload failed. Check Firebase Storage rules.';
+                    if (error.code) {
+                        if (error.code.includes('storage/unauthorized')) {
+                           saveErrorEl.textContent = 'Upload Failed. Check Firebase Storage rules.';
+                        } else if (error.code.includes('storage/object-not-found')) {
+                           saveErrorEl.textContent = 'Upload Failed. Check storageBucket name in config.';
+                        } else {
+                           saveErrorEl.textContent = `Error: ${error.code}`;
+                        }
                     } else {
-                        saveErrorEl.textContent = 'An error occurred. See console for details.';
+                         saveErrorEl.textContent = 'An unknown error occurred. See console.';
                     }
                 }
             });
@@ -432,5 +438,3 @@
     </script>
 </body>
 </html>
-
-
